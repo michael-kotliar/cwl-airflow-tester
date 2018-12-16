@@ -60,7 +60,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'setuptools',
-        'cwl-airflow-parser'
+        'cwl-airflow-parser',
+        'cwltest'
     ],
     zip_safe=False,
     cmdclass={'egg_info': tagger},

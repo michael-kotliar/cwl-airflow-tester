@@ -10,10 +10,13 @@ import requests
 from os.path import join, basename, splitext, dirname
 from future.moves.urllib.parse import urljoin
 
+from queue import Queue
+
 from airflow.settings import DAGS_FOLDER
 
 from cwl_airflow_tester.utils.helpers import normalize_args, load_yaml, gen_dag_id
 from cwl_airflow_tester.utils.cwl import load_job
+from cwl_airflow_tester.utils.checker import start_status_updates_daemon, get_checker_thread
 
 
 API_URL = "http://localhost:8080"
@@ -33,17 +36,19 @@ dag = cwl_workflow("{}")
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Run tests for CWL Airflow Parser', add_help=True)
-    parser.add_argument("-t", "--test", help="Path to the test file", required=True)
+    parser.add_argument("-c", "--conf", help="Path to the test file", required=True)
+    parser.add_argument("-t", "--tmp",  help="Temp directory to save results", required=True)
+    parser.add_argument("-p", "--port", help="Port for http server to listen to status updates", type=int, default=80)
     return parser
 
 
 def load_test_data(args):
-    logging.info(f"""Load tests from: \n{args.test}""")
-    test_data = load_yaml(args.test)
+    logging.info(f"""Load tests from: \n{args.conf}""")
+    test_data = load_yaml(args.conf)
     for test_item in test_data:
         test_item.update({
-            "job":  os.path.normpath(os.path.join(dirname(args.test), test_item["job"])),
-            "tool": os.path.normpath(os.path.join(dirname(args.test), test_item["tool"])),
+            "job":  os.path.normpath(os.path.join(dirname(args.conf), test_item["job"])),
+            "tool": os.path.normpath(os.path.join(dirname(args.conf), test_item["tool"])),
             "run_id": str(uuid.uuid4())
         })
     return test_data
@@ -59,11 +64,13 @@ def gen_dags(test_data):
                 processed.append(cwl_file)
 
 
-def trigger_dags(test_data):
+def trigger_dags(test_data, args):
     for item in test_data:
+        job = load_job(item["job"])
+        job.update({"output_folder": args.tmp})
         json_data = {
             "run_id": item["run_id"],
-            "conf": json.dumps({"job": load_job(item["job"])})
+            "conf": json.dumps({"job": job})
         }
         r = requests.post(url=urljoin(API_URL, f"""/api/experimental/dags/{gen_dag_id(item["tool"])}/dag_runs"""),
                           json=json_data)
@@ -73,11 +80,18 @@ def main(argsl=None):
     if argsl is None:
         argsl = sys.argv[1:]
     args,_ = get_parser().parse_known_args(argsl)
-    args = normalize_args(args)
+    args = normalize_args(args, ["port"])
 
     test_data = load_test_data(args)
+    test_queue = Queue(maxsize=len(test_data))
+
+    start_status_updates_daemon(test_queue, args.port)
+    checker_tread = get_checker_thread(test_data)
+
     gen_dags(test_data)
-    trigger_dags(test_data)
+    trigger_dags(test_data, args)
+
+    checker_tread.join()
 
 
 if __name__ == "__main__":
