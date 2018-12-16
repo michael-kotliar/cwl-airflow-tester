@@ -40,8 +40,8 @@ def check_result(test_data):
         processed = processed + 1
         try:
             controls = [i for i in test_data if i["run_id"] == item["run_id"]][0]
-            print(dumps(controls, indent=4))
-            print(dumps(item["results"], indent=4))
+            # print(dumps(controls, indent=4))
+            # print(dumps(item["results"], indent=4))
             compare(controls.get("output"), item["results"])
             logging.warning("Test Ok")
         except CompareFail as ex:
