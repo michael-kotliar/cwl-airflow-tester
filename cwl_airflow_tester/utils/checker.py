@@ -14,11 +14,11 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         headers = self.headers
         payload = loads(self.rfile.read(int(self.headers['Content-Length'])).decode("UTF-8"))["payload"]
-        if "results" in payload:
+        if "results" in payload or payload["state"] == "failed":
             RESULTS_QUEUE.put({
                 "run_id":  payload["run_id"],
                 "dag_id":  payload["dag_id"],
-                "results": payload["results"]
+                "results": payload.get("results", {})
             })
 
 
