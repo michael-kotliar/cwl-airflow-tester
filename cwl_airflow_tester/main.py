@@ -14,7 +14,7 @@ from queue import Queue
 
 from airflow.settings import DAGS_FOLDER
 
-from cwl_airflow_tester.utils.helpers import normalize_args, load_yaml, gen_dag_id
+from cwl_airflow_tester.utils.helpers import normalize_args, load_yaml, gen_dag_id, get_folder
 from cwl_airflow_tester.utils.cwl import load_job
 from cwl_airflow_tester.utils.checker import start_status_updates_daemon, get_checker_thread
 
@@ -67,7 +67,7 @@ def gen_dags(test_data):
 def trigger_dags(test_data, args):
     for item in test_data:
         job = load_job(item["job"])
-        job.update({"output_folder": args.tmp})
+        job.update({"output_folder": get_folder(os.path.join(args.tmp, item["run_id"]))})
         json_data = {
             "run_id": item["run_id"],
             "conf": json.dumps({"job": job})
