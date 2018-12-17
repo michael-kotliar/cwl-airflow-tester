@@ -63,7 +63,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'setuptools',
-        'cwltest'
+        'cwltest==1.0.20180601100346'
     ],
     zip_safe=False,
     cmdclass={'egg_info': tagger},
