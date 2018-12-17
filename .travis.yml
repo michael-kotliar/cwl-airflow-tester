@@ -1,0 +1,23 @@
+sudo: false
+language: python
+python:
+- 3.6
+os:
+- linux
+env:
+- SLUGIFY_USES_TEXT_UNIDECODE=yes
+install:
+- pip install .
+script: echo "Dummy message"
+branches:
+  only:
+  - master
+deploy:
+  provider: pypi
+  user: michael_kotliar
+  on:
+    tags: true
+  password:
+    secure: dx39KsoVVk9DTw+oK8TZn1eHk8PtCSD+EViucSZ6eqPV5XZobtkYNZexWhbr5Y6GSxW63jqQ54dmXwOiw3iao/FnZHPQcdfGs85WLyEY7EgXyqnVsnvmbn3xwxmeBPD2yRkKxzm6cJBsyzQFueUbptaJJNiFxFg0Mr6hnX3idqj+IAVKkVw92BGQt7lZgEXxcqyBP6fSBcBw7n8TIT12+MTc8VRdnDWX8fbk5ZLwDpvqyL7zqmNWjRy+8dL9mzwmTjVgyBviYOMtEASBDeXwMn/eJIGH7Rw2dGCF1GlB0Xb2PYK1JQsDGeSgk505VeHi4uhYQc7IygBJ5FTExJuAM0knlba6LKQPPMwn7tJL4Zcx9Cv/XkkhH+VCwp7qIf7ALKyOECDU4BfpeqYmbmF0R5un3tIcu2TPESDV1mdBj1lVyYuPX/Ia2SDPdpsS6o+Gh96wp8ELKzCB2oaTQAEbll3YwNit59lsOCB3qxE33lFJSzw3LA1rG+vVaUxySVL1MM4dXjM3YZhQkBY1LKvKJ0+2FpATZBticag33kDEOgPnLNz/SzWrXwjlxj0P7kiXinobbRz5H+55tYFl5FMxKGsMSXRqhHyJu3NJ6eGSHoyR9sxb8Tk+56l2ssHW8aC+qLyubIq2Aof1KCQlGDDdDosPGNBkrY7TY/x3mYBbpI0=
+notifications:
+  email: false
