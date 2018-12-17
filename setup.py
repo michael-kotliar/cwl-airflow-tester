@@ -7,20 +7,23 @@ from time import strftime, gmtime
 from setuptools.command.egg_info import egg_info
 import pkg_resources
 
+
 SETUP_DIR = path.dirname(__file__)
 README = path.join(SETUP_DIR, 'README.md')
 
-SETUPTOOLS_VER = pkg_resources.get_distribution(
-    "setuptools").version.split('.')
+
+SETUPTOOLS_VER = pkg_resources.get_distribution("setuptools").version.split('.')
+
 
 RECENT_SETUPTOOLS = int(SETUPTOOLS_VER[0]) > 40 or (
     int(SETUPTOOLS_VER[0]) == 40 and int(SETUPTOOLS_VER[1]) > 0) or (
         int(SETUPTOOLS_VER[0]) == 40 and int(SETUPTOOLS_VER[1]) == 0 and
         int(SETUPTOOLS_VER[2]) > 0)
 
-class EggInfoFromGit(egg_info):
-    """Tag the build with git commit timestamp.
 
+class EggInfoFromGit(egg_info):
+    """
+    Tag the build with git commit timestamp.
     If a build tag has already been set (e.g., "egg_info -b", building
     from source package), leave it alone.
     """
@@ -60,7 +63,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         'setuptools',
-        'cwl-airflow-parser',
         'cwltest'
     ],
     zip_safe=False,
