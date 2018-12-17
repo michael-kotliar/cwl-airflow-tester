@@ -6,11 +6,15 @@ from http.server import SimpleHTTPRequestHandler
 from json import dumps, loads
 from cwltest.utils import compare, CompareFail
 
+from cwl_airflow_tester.utils.mute import Mute
+
+
 RESULTS_QUEUE = None
 
-class Handler(SimpleHTTPRequestHandler):
+class CustomHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
-        self.send_response(200)
+        with Mute():  # Suppress output
+            self.send_response(200)
         self.end_headers()
         headers = self.headers
         payload = loads(self.rfile.read(int(self.headers['Content-Length'])).decode("UTF-8"))["payload"]
@@ -18,38 +22,35 @@ class Handler(SimpleHTTPRequestHandler):
             RESULTS_QUEUE.put({
                 "run_id":  payload["run_id"],
                 "dag_id":  payload["dag_id"],
-                "results": payload.get("results", {})
+                "state":   payload["state"],
+                "results": payload.get("results", None)
             })
 
 
-def start_status_updates_daemon(queue, port=8080):
+def get_listener_thread(queue, port, daemon):
     global RESULTS_QUEUE
     RESULTS_QUEUE = queue
-    httpd = socketserver.TCPServer(("", port), Handler)
-    t = threading.Thread(target=httpd.serve_forever, daemon=True)
-    t.start()
+    httpd = socketserver.TCPServer(("", port), CustomHandler)
+    return threading.Thread(target=httpd.serve_forever, daemon=daemon)
 
 
-def check_result(test_data):
+def evaluate_result(data):
     processed = 0
-    while processed < len(test_data):
+    while processed < len(data):
         try:
             item = RESULTS_QUEUE.get()
         except queue.Empty:
             continue
         processed = processed + 1
         try:
-            controls = [i for i in test_data if i["run_id"] == item["run_id"]][0]
-            # print(dumps(controls, indent=4))
-            # print(dumps(item["results"], indent=4))
-            compare(controls.get("output"), item["results"])
-            logging.warning("Test Ok")
+            compare(data[item["run_id"]]["output"], item["results"])
+            logging.error(f"""Success - {item["dag_id"]}: {item["run_id"]}""")
         except CompareFail as ex:
-            logging.warning("Test failed")
-            logging.warning(f"Compare failure {ex}")
+            logging.error(f"""Fail    - {item["dag_id"]}: {item["run_id"]}""")
+            logging.debug(f""" - {ex}""")
 
 
-def get_checker_thread(test_data):
-    t = threading.Thread(target=check_result, kwargs={"test_data": test_data})
-    t.start()
-    return t
+def get_checker_thread(data, daemon):
+    return threading.Thread(target=evaluate_result,
+                            daemon=daemon,
+                            kwargs={"data": data})

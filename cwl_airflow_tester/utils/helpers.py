@@ -9,8 +9,8 @@ def load_yaml(imput_file):
     return data
 
 
-def gen_dag_id(cwl_workflow):
-    return os.path.splitext(os.path.basename(cwl_workflow))[0].replace(".", "_dot_")
+def gen_dag_id(cwl_file):
+    return os.path.splitext(os.path.basename(cwl_file))[0].replace(".", "_dot_")
 
 
 def normalize_args(args, skip_list=[]):
