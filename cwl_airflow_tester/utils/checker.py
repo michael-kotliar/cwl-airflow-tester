@@ -2,8 +2,9 @@ import threading
 import logging
 import socketserver
 import queue
+import shutil
 from http.server import SimpleHTTPRequestHandler
-from json import dumps, loads
+from json import loads
 from cwltest.utils import compare, CompareFail
 
 from cwl_airflow_tester.utils.mute import Mute
@@ -48,6 +49,13 @@ def evaluate_result(data):
         except CompareFail as ex:
             logging.error(f"""Fail      {item["dag_id"]}: {item["run_id"]}""")
             logging.debug(f"""{ex}""")
+        finally:
+            try:
+                output_folder = data[item["run_id"]]["output_folder"]
+                shutil.rmtree(output_folder)
+                logging.debug(f"""Delete output directory {output_folder}""")
+            except Exception as ex:
+                logging.error(f"""Failed to delete temporary output directory \n{ex}""")
 
 
 def get_checker_thread(data, daemon):

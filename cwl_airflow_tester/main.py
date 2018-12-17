@@ -48,14 +48,17 @@ def get_parser():
 
 def load_data(args):
     logging.info(f"""Load test data from: {args.test}""")
-    data = loads(dumps(load_yaml(args.test)))
-    logging.debug(f""" - {len(data)} test[s] have been loaded""")
-    for item in data:
+    data_formatted = {}
+    for item in loads(dumps(load_yaml(args.test))):
+        run_id = str(uuid.uuid4())
         item.update({
             "job":  os.path.normpath(os.path.join(dirname(args.test), item["job"])),
             "tool": os.path.normpath(os.path.join(dirname(args.test), item["tool"])),
+            "output_folder": get_folder(os.path.join(args.output, run_id))
         })
-    return {str(uuid.uuid4()): item for item in data}
+        data_formatted[run_id] = item
+    logging.debug(f""" - {len(data_formatted)} test[s] have been loaded""")
+    return data_formatted
 
 
 def export_dags(data):
@@ -75,15 +78,15 @@ def trigger_dags(data, args):
     logging.info(f"""Trigger DAGs""")
     for run_id, value in data.items():
         dag_id = gen_dag_id(value["tool"])
-        logging.debug(f""" - {dag_id}: {run_id}""")
         job = load_job(value["job"])
-        job.update({"output_folder": get_folder(os.path.join(args.output, run_id))})
+        job.update({"output_folder": value["output_folder"]})
         with Mute():
             r = requests.post(url=urljoin(args.endpoint, f"""/api/experimental/dags/{dag_id}/dag_runs"""),
                               json={
                                   "run_id": run_id,
                                   "conf": dumps({"job": job})
                               })
+        logging.debug(f""" - {dag_id}: {run_id}""")
 
 
 def main(argsl=None):
