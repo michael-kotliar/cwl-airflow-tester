@@ -124,6 +124,9 @@ def main(argsl=None):
     # Wait until all triggered dags return results
     checker.join()
 
+    if any(item.get("error", None) for item in data_dict.values()):
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

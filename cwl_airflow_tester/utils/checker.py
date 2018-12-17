@@ -12,6 +12,7 @@ from cwl_airflow_tester.utils.mute import Mute
 
 RESULTS_QUEUE = None
 
+
 class CustomHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         with Mute():
@@ -45,10 +46,11 @@ def evaluate_result(data):
         processed = processed + 1
         try:
             compare(data[item["run_id"]]["output"], item["results"])
-            logging.error(f"""Success   {item["dag_id"]}: {item["run_id"]}""")
+            logging.error(f"""\nSuccess   {item["dag_id"]}: {item["run_id"]}""")
         except CompareFail as ex:
-            logging.error(f"""Fail      {item["dag_id"]}: {item["run_id"]}""")
-            logging.debug(f"""{ex}""")
+            data[item["run_id"]]["error"] = str(ex)
+            logging.error(f"""\nFail      {item["dag_id"]}: {item["run_id"]}""")
+            logging.debug(f"""{data[item["run_id"]]["error"]}""")
         finally:
             try:
                 output_folder = data[item["run_id"]]["output_folder"]
