@@ -36,10 +36,10 @@ dag = cwl_workflow("{}")
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Run tests for CWL Airflow Parser', add_help=True)
-    parser.add_argument("-t", "--test",     help="Path to the test file",     required=True)
-    parser.add_argument("-o", "--output",   help="Directory to save outputs", required=True)
-    parser.add_argument("-p", "--port",     help="Port to listen to status updates", type=int, default=80)
-    parser.add_argument("-e", "--endpoint", help="Airflow endpoint to trigger DAG", default=conf_get_default("cli", "endpoint_url", "http://localhost:8080"))
+    parser.add_argument("-t", "--test",     help="Path to the test file",               required=True)
+    parser.add_argument("-o", "--output",   help="Directory to save temporary outputs", default="/tmp")
+    parser.add_argument("-p", "--port",     help="Port to listen to status updates",    type=int, default=80)
+    parser.add_argument("-e", "--endpoint", help="Airflow endpoint to trigger DAG",     default=conf_get_default("cli", "endpoint_url", "http://localhost:8080"))
     logging_level = parser.add_mutually_exclusive_group()
     logging_level.add_argument("-d", "--debug",    help="Output debug information", action="store_true")
     logging_level.add_argument("-q", "--quiet",    help="Suppress all outputs except errors", action="store_true")
@@ -78,11 +78,12 @@ def trigger_dags(data, args):
         logging.debug(f""" - {dag_id}: {run_id}""")
         job = load_job(value["job"])
         job.update({"output_folder": get_folder(os.path.join(args.output, run_id))})
-        r = requests.post(url=urljoin(args.endpoint, f"""/api/experimental/dags/{dag_id}/dag_runs"""),
-                          json={
-                              "run_id": run_id,
-                              "conf": dumps({"job": job})
-                          })
+        with Mute():
+            r = requests.post(url=urljoin(args.endpoint, f"""/api/experimental/dags/{dag_id}/dag_runs"""),
+                              json={
+                                  "run_id": run_id,
+                                  "conf": dumps({"job": job})
+                              })
 
 
 def main(argsl=None):

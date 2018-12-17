@@ -13,7 +13,7 @@ RESULTS_QUEUE = None
 
 class CustomHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
-        with Mute():  # Suppress output
+        with Mute():
             self.send_response(200)
         self.end_headers()
         headers = self.headers
@@ -44,10 +44,10 @@ def evaluate_result(data):
         processed = processed + 1
         try:
             compare(data[item["run_id"]]["output"], item["results"])
-            logging.error(f"""Success - {item["dag_id"]}: {item["run_id"]}""")
+            logging.error(f"""Success   {item["dag_id"]}: {item["run_id"]}""")
         except CompareFail as ex:
-            logging.error(f"""Fail    - {item["dag_id"]}: {item["run_id"]}""")
-            logging.debug(f""" - {ex}""")
+            logging.error(f"""Fail      {item["dag_id"]}: {item["run_id"]}""")
+            logging.debug(f"""{ex}""")
 
 
 def get_checker_thread(data, daemon):
