@@ -64,6 +64,7 @@ def load_data(args):
 def export_dags(data):
     logging.info(f"""Export DAGs to: {DAGS_FOLDER}""")
     dags = []
+    get_folder(DAGS_FOLDER)
     for item in data.values():
         cwl_file = item["tool"]
         dag_file = join(DAGS_FOLDER, splitext(basename(cwl_file))[0]+".py")
