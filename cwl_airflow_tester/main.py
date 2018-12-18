@@ -20,6 +20,7 @@ with Mute():
     from cwl_airflow_tester.utils.checker import get_listener_thread, get_checker_thread
     from cwl_airflow_tester.utils.airflow import conf_get_default
     from cwl_airflow_tester.utils.logger import reset_root_logger
+    from cwl_airflow_tester.utils.spinner import get_spinner_thread
 
 
 DAG_TEMPLATE="""#!/usr/bin/env python3
@@ -121,6 +122,11 @@ def main(argsl=None):
 
     # Trigger all dags
     trigger_dags(data_dict, args)
+
+    # Display spinner if  --debug
+    if args.debug:
+        spinner = get_spinner_thread()
+        spinner.start()
 
     # Wait until all triggered dags return results
     checker.join()
