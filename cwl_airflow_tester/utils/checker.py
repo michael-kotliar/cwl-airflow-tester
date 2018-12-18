@@ -20,6 +20,7 @@ class CustomHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         headers = self.headers
         payload = loads(self.rfile.read(int(self.headers['Content-Length'])).decode("UTF-8"))["payload"]
+        logging.debug(f"""   got updates from {payload["dag_id"]} - {payload["run_id"]} - {payload["state"]}""")
         if "results" in payload or payload["state"] == "failed":
             RESULTS_QUEUE.put({
                 "run_id":  payload["run_id"],
