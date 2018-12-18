@@ -62,12 +62,12 @@ def load_data(args):
 
 
 def export_dags(data):
-    logging.info(f"""Export DAGs to: {DAGS_FOLDER}""")
+    dag_folder = get_folder(DAGS_FOLDER)  # creates DAGS_FOLDER if doesn't exist
+    logging.info(f"""Export DAGs to: {dag_folder}""")
     dags = []
-    get_folder(DAGS_FOLDER)
     for item in data.values():
         cwl_file = item["tool"]
-        dag_file = join(DAGS_FOLDER, splitext(basename(cwl_file))[0]+".py")
+        dag_file = join(dag_folder, splitext(basename(cwl_file))[0]+".py")
         if dag_file not in dags:
             with open(dag_file, 'w') as out_stream:
                 out_stream.write(DAG_TEMPLATE.format(cwl_file))
@@ -108,7 +108,7 @@ def main(argsl=None):
     data_dict = load_data(args)
     queue = Queue(maxsize=len(data_dict))
 
-    # Create dags in DAGS_FOLDER
+    # Export dags to dag folder
     export_dags(data_dict)
 
     # Start status update listener

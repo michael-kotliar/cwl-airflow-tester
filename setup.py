@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 from setuptools import setup, find_packages
 from os import path
 from subprocess import check_output, CalledProcessError
@@ -63,6 +62,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         'setuptools',
+        'requests',
+        'cwltool',
+        'ruamel.yaml',
         'cwltest==1.0.20180601100346'
     ],
     zip_safe=False,

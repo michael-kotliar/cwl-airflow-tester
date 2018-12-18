@@ -8,7 +8,7 @@ env:
 - SLUGIFY_USES_TEXT_UNIDECODE=yes
 install:
 - pip install .
-script: echo "Dummy message"
+script: echo "This should run tests"
 branches:
   only:
   - master
