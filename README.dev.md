@@ -12,5 +12,6 @@
 - `cwltool` version is not fixed, because only few function are used from `cwltool.load_tool`
    and they are not likely to be changed.
 - `schema_salad` is not set as dependency, because it will be installed with `cwltool`.
-- if `--debug` is provided, the spinner will be displayed. This feature is useful when running tests
+- if `--spin` is provided, the spinner will be displayed. This feature is useful when running tests
   on Travis (if there is no outputs more then 10 min Travis might kill the job).
+- 

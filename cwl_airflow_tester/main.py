@@ -42,6 +42,7 @@ def get_parser():
     parser.add_argument("-p", "--port",     help="Port to listen to status updates",    type=int, default=80)
     parser.add_argument("-e", "--endpoint", help="Airflow endpoint to trigger DAG",     default=conf_get_default("cli", "endpoint_url", "http://localhost:8080"))
     parser.add_argument("-r", "--range",    help="Run specific tests, format is 1,3-6,9", required=False)
+    parser.add_argument("-s", "--spin",     help="Display spinner wher running", action="store_true")
     logging_level = parser.add_mutually_exclusive_group()
     logging_level.add_argument("-d", "--debug",    help="Output debug information", action="store_true")
     logging_level.add_argument("-q", "--quiet",    help="Suppress all outputs except errors", action="store_true")
@@ -52,21 +53,18 @@ def load_data(args):
     logging.info(f"""Load test data from: {args.test}""")
     data_raw = load_yaml(args.test)
 
-    if args.range:
+    try:
         n = []
         for r in args.range.split(","):
             s = r.split("-")
-            if len(s) == 2:
-                n.extend(list(range(int(s[0]) - 1, int(s[1]))))
-            else:
-                n.append(int(r) - 1)
-    else:
+            n.extend(list(range(int(s[0]) - 1, int(s[1])))) if len(s) == 2 else n.append(int(r) - 1)
+    except Exception:
         n = list(range(0, len(data_raw)))
 
-    data_filtered = [data_raw[i] for i in n if 0 <= i < len(data_raw)]
+    data_raw_filtered = [data_raw[i] for i in n if 0 <= i < len(data_raw)]
 
     data_formatted = {}
-    for item in loads(dumps(data_filtered)):
+    for item in loads(dumps(data_raw_filtered)):
         run_id = str(uuid.uuid4())
         item.update({
             "job":  os.path.normpath(os.path.join(dirname(args.test), item["job"])),
@@ -104,14 +102,14 @@ def trigger_dags(data, args):
                                   "run_id": run_id,
                                   "conf": dumps({"job": job})
                               })
-        logging.debug(f""" - {dag_id}: {run_id}""")
+        logging.debug(f""" - {dag_id}: {run_id} \n{r.text}""")
 
 
 def main(argsl=None):
     if argsl is None:
         argsl = sys.argv[1:]
     args,_ = get_parser().parse_known_args(argsl)
-    args = normalize_args(args, ["port", "endpoint", "debug", "quiet", "range"])
+    args = normalize_args(args, ["port", "endpoint", "debug", "quiet", "range", "spin"])
 
     # Set logger level
     if args.debug:
@@ -139,8 +137,8 @@ def main(argsl=None):
     # Trigger all dags
     trigger_dags(data_dict, args)
 
-    # Display spinner if  --debug
-    if args.debug:
+    # Display spinner if  --spin
+    if args.spin:
         spinner = get_spinner_thread()
         spinner.start()
 
