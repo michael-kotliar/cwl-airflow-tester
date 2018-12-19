@@ -14,4 +14,4 @@
 - `schema_salad` is not set as dependency, because it will be installed with `cwltool`.
 - if `--spin` is provided, the spinner will be displayed. This feature is useful when running tests
   on Travis (if there is no outputs more then 10 min Travis might kill the job).
-- 
+- you can choose which tests to run with the `--range` argument
