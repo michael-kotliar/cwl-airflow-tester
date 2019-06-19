@@ -24,7 +24,7 @@ with Mute():
 
 
 DAG_TEMPLATE="""#!/usr/bin/env python3
-from cwl_airflow_parser import CWLDAG, CWLJobDispatcher, CWLJobGatherer
+from cwl_airflow import CWLDAG, CWLJobDispatcher, CWLJobGatherer
 def cwl_workflow(workflow_file):
     dag = CWLDAG(cwl_workflow=workflow_file)
     dag.create()
