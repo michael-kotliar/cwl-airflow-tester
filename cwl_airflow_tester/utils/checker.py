@@ -4,7 +4,7 @@ import socketserver
 import queue
 import shutil
 from http.server import SimpleHTTPRequestHandler
-from json import loads
+from json import loads, dumps
 from cwltest.utils import compare, CompareFail
 
 from cwl_airflow_tester.utils.mute import Mute
@@ -18,14 +18,14 @@ class CustomHandler(SimpleHTTPRequestHandler):
         with Mute():
             self.send_response(200)
         self.end_headers()
-        headers = self.headers
+        if "status" in self.path:
+            return None
         payload = loads(self.rfile.read(int(self.headers['Content-Length'])).decode("UTF-8"))["payload"]
-        logging.debug(f"""   got updates from {payload["dag_id"]} - {payload["run_id"]} - {payload["state"]}""")
-        if "results" in payload or payload["state"] == "failed":
+        if payload.get("results", None) or payload.get("state", None) == "failed":
+            logging.debug(f"""   got updates from {self.path}:\n{dumps(payload, indent=4)}""")
             RESULTS_QUEUE.put({
                 "run_id":  payload["run_id"],
                 "dag_id":  payload["dag_id"],
-                "state":   payload["state"],
                 "results": payload.get("results", None)
             })
 
