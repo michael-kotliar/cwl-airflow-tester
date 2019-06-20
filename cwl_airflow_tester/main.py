@@ -14,7 +14,6 @@ from future.moves.urllib.parse import urljoin
 from cwl_airflow_tester.utils.mute import Mute
 with Mute():
     from airflow.settings import DAGS_FOLDER
-
     from cwl_airflow_tester.utils.helpers import normalize_args, load_yaml, gen_dag_id, get_folder
     from cwl_airflow_tester.utils.cwl import load_job
     from cwl_airflow_tester.utils.checker import get_listener_thread, get_checker_thread
@@ -96,12 +95,12 @@ def trigger_dags(data, args):
         dag_id = gen_dag_id(value["tool"])
         job = load_job(value["job"])
         job.update({"output_folder": value["output_folder"]})
-        with Mute():
-            r = requests.post(url=urljoin(args.endpoint, f"""/api/experimental/dags/{dag_id}/dag_runs"""),
-                              json={
-                                  "run_id": run_id,
-                                  "conf": dumps({"job": job})
-                              })
+        # with Mute():
+        r = requests.post(url=urljoin(args.endpoint, f"""/api/experimental/dags/{dag_id}/dag_runs"""),
+                            json={
+                                "run_id": run_id,
+                                "conf": dumps({"job": job})
+                            })
         logging.debug(f""" - {dag_id}: {run_id} \n{r.text}""")
 
 

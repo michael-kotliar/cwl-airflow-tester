@@ -15,8 +15,8 @@ RESULTS_QUEUE = None
 
 class CustomHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
-        with Mute():
-            self.send_response(200)
+        # with Mute():
+        self.send_response(200)
         self.end_headers()
         if "status" in self.path:
             return None
